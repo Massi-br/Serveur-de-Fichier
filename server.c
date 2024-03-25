@@ -15,13 +15,12 @@
 #define PATH_LENGTH 1024
 #define FILE_LENGTH 256
 #define DIRECTORY "/home/kali/Desktop/L3 Rouen/Réseaux/tp8/files"
+#define LOG_PATH "/tmp/fileserver.log"
 
-void handle_sigint();
+void handle_sigint(int socket_fd);
 int is_safe_filename(const char *filename) ;
 
 int main(int argc, char* argv[]){
-
-    signal(SIGINT, handle_sigint);
 
     if (argc !=2){
         fprintf(stderr,"[*] Usage: %s <directory>",argv[0]);
@@ -33,6 +32,8 @@ int main(int argc, char* argv[]){
         perror("[-] socket_creation_error");
         exit(EXIT_FAILURE);
     }
+
+    signal(SIGINT, handle_sigint);
 
     struct sockaddr_in server_addr;
 
@@ -78,6 +79,7 @@ int main(int argc, char* argv[]){
             fprintf(stderr, "[!] Nom de fichier non sécurisé\n");
             snprintf(error_message, BUF_SIZE, "[!] Nom de fichier non sécurisé : %s\n", filename);
             send(client_fd, error_message, strlen(error_message), 0);
+            close(sock_fd);
             exit(EXIT_FAILURE);
         }
         printf("[*] Filename: %s\n", filename);
@@ -111,10 +113,20 @@ int main(int argc, char* argv[]){
         while ((bytes_read=fread(buffer,1,sizeof(buffer),f)) >0){
             send(client_fd,buffer,bytes_read,0);
         }
+
+        FILE *log = fopen(LOG_PATH,"a");
+        if (log == NULL){
+            perror("[-] Logfile_openning_failed");
+            exit(EXIT_FAILURE);
+        }
+        
+        fprintf(log,"[+] Connection accepted from %s/%d :requested file:%s :window_size:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port),filename,window_size);
+        fclose(log);
+
         fclose(f);
         close(client_fd);
     }
-    close(sock_fd);
+
     return EXIT_SUCCESS;
 }
 
@@ -133,7 +145,8 @@ int is_safe_filename(const char *filename) {
 }
 
 
-void handle_sigint() {
+void handle_sigint(int socket_fd) {
     printf("\n[*] Received SIGINT. Closing server...\n");
+    close(socket_fd);
     exit(EXIT_SUCCESS);
 }
