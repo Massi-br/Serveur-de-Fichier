@@ -1,0 +1,4 @@
+[+] Connection accepted from 10.0.2.15/58092 :requested file:message1.txt :window_size:1024
+[+] Connection accepted from 10.0.2.15/55268 :requested file:message1.txt :window_size:1024
+[+] Connection accepted from 10.0.2.15/55274 :requested file:message2.txt :window_size:1024
+[+] Connection accepted from 10.0.2.15/36860 :requested file:message2.txt :window_size:1024
